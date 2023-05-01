@@ -1,0 +1,7 @@
+ffmpeg-python
+faster-whisper
+transformers
+torch
+torchvision
+torchaudio
+requests
