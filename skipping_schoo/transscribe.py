@@ -52,6 +52,7 @@ def transcribe(
     compute_type: str = COMPUTE_TYPE,
     language: str = LANGUAGE,
     overwrite: bool = False,
+    cleanup: bool = False,
 ) -> str:
     """Uses Whisper to create a transcript"""
     log(f"Loading Video File '{input_filename}'...")
@@ -96,6 +97,9 @@ def transcribe(
         log(
             f"Finished transcribing, took {mins} minutes, output written to {full_path_out}"
         )
+        if cleanup:
+            log(f"Cleanup set to true, deleting input audio at {input_filename}")
+            os.unlink(input_filename)
     return full_path_out
 
 
@@ -105,10 +109,22 @@ def main() -> int:
         description="Produces a transcript of a .wav file",
     )
     parser.add_argument("audio_file")
+    parser.add_argument(
+        "-c",
+        "--cleanup",
+        action="store_true",
+        help="if set, will delete the source audio after transcribing",
+    )
+    parser.add_argument(
+        "-o",
+        "--overwrite",
+        action="store_true",
+        help="if set, will overwrite any existing files on disk related to previous extraction attempts on the input video",
+    )
 
     args = parser.parse_args()
 
-    transcribe(args.audio_file)
+    transcribe(args.audio_file, overwrite=args.overwrite, cleanup=args.cleanup)
 
     return 0
 

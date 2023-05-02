@@ -14,6 +14,7 @@ from transformers import AutoTokenizer
 import torch
 from openai.error import RateLimitError
 from skipping_schoo import utils
+import shutil
 
 PROG = "Summarize"
 
@@ -98,7 +99,9 @@ def _stitch_summaries(summaries: list[str]) -> str:
     return "\n".join(summaries)
 
 
-def summarizer_file(filename: str, course_title: str, overwrite: bool = False) -> str:
+def summarizer_file(
+    filename: str, course_title: str, overwrite: bool = False, cleanup: bool = False
+) -> str:
     base_dir = utils.get_output_directory_path(filename)
     chunk_path = os.path.join(base_dir, "chunks")
     summary_path = os.path.join(base_dir, "summaries")
@@ -126,6 +129,10 @@ def summarizer_file(filename: str, course_title: str, overwrite: bool = False) -
         )
         return ""
     summary = summary_of_summaries(filename, summaries, course_title)
+    if cleanup:
+        log(f"Cleanup set to true, deleting snippet and summary collections")
+        shutil.rmtree(chunk_path, ignore_errors=True)
+        shutil.rmtree(summary_path, ignore_errors=True)
     return summary
 
 
@@ -329,8 +336,8 @@ def main() -> int:
     parser.add_argument("transcript")
     parser.add_argument("title")
     parser.add_argument(
-        "-c",
-        "--chunk",
+        "-b",
+        "--block",
         action="store_true",
         help="Produces n textfiles where each file is one chunk of the full input text",
     )
@@ -340,13 +347,19 @@ def main() -> int:
         action="store_true",
         help="If set, overwrites all files that may be on disk and requests a brand new set of chunked summaries from OpenAI. Keep unset if you want to be able to recover from a crash",
     )
+    parser.add_argument(
+        "-c",
+        "--cleanup",
+        action="store_true",
+        help="if set, will delete the summary snippets after processing the final summary of summaries",
+    )
 
     args = parser.parse_args()
 
     if args.chunk:
         write_chunks_to_files(args.transcript)
     else:
-        summarizer_file(args.transcript, args.title, overwrite=args.overwrite)
+        summarizer_file(args.transcript, args.title, overwrite=args.overwrite, cleanup=args.cleanup)
 
     return 0
 

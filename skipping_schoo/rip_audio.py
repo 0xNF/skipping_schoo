@@ -12,7 +12,12 @@ def log(msg: str, end="\n") -> None:
     utils.log(msg, end=end, prog=PROG)
 
 
-def rip(input_filename: str, output_filename: str, overwrite: bool = False) -> str:
+def rip(
+    input_filename: str,
+    output_filename: str,
+    overwrite: bool = False,
+    cleanup: bool = False,
+) -> str:
     """Uses FFMPEG to rip audio
     returns the path of the output wav file
     """
@@ -41,6 +46,9 @@ def rip(input_filename: str, output_filename: str, overwrite: bool = False) -> s
         ]
         x = subprocess.run(args, stdout=subprocess.PIPE)
         x.check_returncode()
+    if cleanup:
+        log(f"Cleanup set to true, deleting input video at {input_filename}")
+        os.unlink(input_filename)
     return full_path_out
 
 
@@ -50,11 +58,28 @@ def main() -> int:
         description="Rips audio from an mp4 file into a single 16khz mono wav file",
     )
     parser.add_argument("video_file")
+    parser.add_argument(
+        "-o",
+        "--overwrite",
+        action="store_true",
+        help="if set, will overwrite any existing files on disk related to previous extraction attempts on the input video",
+    )
+    parser.add_argument(
+        "-c",
+        "--cleanup",
+        action="store_true",
+        help="if set, will delete the source video after ripping the audio",
+    )
 
     args = parser.parse_args()
 
     output_filename = utils.make_output_filename(args.video_file, "wav")
-    rip(args.video_file, output_filename)
+    rip(
+        args.video_file,
+        output_filename,
+        overwrite=args.overwrite,
+        cleanup=args.cleanup,
+    )
 
     return 0
 
