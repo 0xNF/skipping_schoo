@@ -38,6 +38,7 @@ def get_runtime_secs(input_file: str) -> int:
         input_file,
     ]
     x = subprocess.run(args, stdout=subprocess.PIPE, encoding="utf8")
+    x.check_returncode()
     dur_str = x.stdout.strip()
     dur_str = dur_str.split(".")[0]
     dur = int(dur_str)
@@ -50,7 +51,8 @@ def transcribe(
     device: str = DEVICE,
     compute_type: str = COMPUTE_TYPE,
     language: str = LANGUAGE,
-) -> None:
+    overwrite: bool = False,
+) -> str:
     """Uses Whisper to create a transcript"""
     log(f"Loading Video File '{input_filename}'...")
     runtime_secs = get_runtime_secs(input_filename)
@@ -63,27 +65,33 @@ def transcribe(
     os.makedirs(utils.get_output_directory_path(input_filename), exist_ok=True)
     full_path_out = os.path.join(output_path, output_filename)
 
-    log(f"Will write output to {full_path_out}")
-    log(f"Loading Whisper model '{model_size}'...")
-    whisper = WhisperModel(model_size, device=device, compute_type=compute_type)
-    log("Whisper model loaded. Beginning transcription")
-    segments, info = whisper.transcribe(input_filename, language=language)
-    with open(full_path_out, "w", encoding="utf8") as f:
-        for segment in segments:
-            segment_start_secs = round(segment.start, 2)
-            segment_end_secs = round(segment.end, 2)
-            percent_done = round(segment_end_secs / runtime_secs, 2) * 100
-            as_utf8 = segment.text
-            log(
-                f"\r[{percent_done}%] Transcribed {segment_end_secs} seconds: {as_utf8}",
-                end="\r",
-            )
-            txt = FMT.format(segment_start_secs, segment_end_secs, as_utf8)
-            f.write(txt)
-            f.write("\n")
-            f.flush()
-    utils.eprint("", end="\r")
-    log("Finished transcribing")
+    if not overwrite and os.path.exists(full_path_out):
+        log(
+            f"Transcription file already existed at {full_path_out}, and overwrite is set to false. Skipping transcribe step"
+        )
+    else:
+        log(f"Will write output to {full_path_out}")
+        log(f"Loading Whisper model '{model_size}'...")
+        whisper = WhisperModel(model_size, device=device, compute_type=compute_type)
+        log("Whisper model loaded. Beginning transcription")
+        segments, info = whisper.transcribe(input_filename, language=language)
+        with open(full_path_out, "w", encoding="utf8") as f:
+            for segment in segments:
+                segment_start_secs = round(segment.start, 2)
+                segment_end_secs = round(segment.end, 2)
+                percent_done = round(segment_end_secs / runtime_secs, 2) * 100
+                as_utf8 = segment.text
+                log(
+                    f"\r[{percent_done}%] Transcribed {segment_end_secs} seconds: {as_utf8}",
+                    end="\r",
+                )
+                txt = FMT.format(segment_start_secs, segment_end_secs, as_utf8)
+                f.write(txt)
+                f.write("\n")
+                f.flush()
+        utils.eprint("", end="\r")
+        log(f"Finished transcribing, output written to {full_path_out}")
+    return full_path_out
 
 
 def main() -> int:

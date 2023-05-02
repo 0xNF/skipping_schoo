@@ -12,28 +12,36 @@ def log(msg: str, end="\n") -> None:
     utils.log(msg, end=end, prog=PROG)
 
 
-def rip(input_filename: str, output_filename: str) -> None:
-    """Uses FFMPEG to rip audio"""
+def rip(input_filename: str, output_filename: str, overwrite: bool = False) -> str:
+    """Uses FFMPEG to rip audio
+    returns the path of the output wav file
+    """
 
     output_path = utils.get_output_directory_path(input_filename)
     os.makedirs(utils.get_output_directory_path(input_filename), exist_ok=True)
     full_path_out = os.path.join(output_path, output_filename)
 
-    log(f"Ripping audio for file '{input_filename}' into '{full_path_out}'")
-
-    args = [
-        "ffmpeg",
-        "-i",
-        input_filename,
-        "-acodec",
-        "pcm_s16le",
-        "-ac",
-        "1",
-        "-ar",
-        "16000",
-        full_path_out,
-    ]
-    subprocess.run(args, stdout=subprocess.PIPE)
+    if not overwrite and os.path.exists(full_path_out):
+        log(
+            f"Audio file already existed at {full_path_out}, and overwrite is set to false. Skipping rip step"
+        )
+    else:
+        log(f"Ripping audio for file '{input_filename}' into '{full_path_out}'")
+        args = [
+            "ffmpeg",
+            "-i",
+            input_filename,
+            "-acodec",
+            "pcm_s16le",
+            "-ac",
+            "1",
+            "-ar",
+            "16000",
+            full_path_out,
+        ]
+        x = subprocess.run(args, stdout=subprocess.PIPE)
+        x.check_returncode()
+    return full_path_out
 
 
 def main() -> int:

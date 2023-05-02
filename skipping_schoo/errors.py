@@ -1,0 +1,3 @@
+class SkippingSchooError(Exception):
+    pass
+

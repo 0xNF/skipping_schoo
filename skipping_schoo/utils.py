@@ -3,6 +3,8 @@ import os
 import sys
 
 
+ENCODING = "utf8"
+
 def eprint(*msg: object, end: str = "\n") -> None:
     """Prints to stderr"""
     print(*msg, end=end, file=sys.stderr)

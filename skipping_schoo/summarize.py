@@ -28,7 +28,6 @@ FREQUENCY_PENALTY = 0
 PRESENCE_PENALTY = 0
 
 TOKENIZER = AutoTokenizer.from_pretrained("gpt2")
-ENCODING = "utf8"
 
 
 def log(msg: str, end="\n") -> None:
@@ -37,7 +36,7 @@ def log(msg: str, end="\n") -> None:
 
 def count_tokens_file(filename: str) -> int:
     """Runs a local tokenizer that roughly matches OpenAI's gpt3 and returns the total tokens in a given text from a filename"""
-    with open(filename, "r", encoding=ENCODING) as f:
+    with open(filename, "r", encoding=utils.ENCODING) as f:
         text = f.read()
         return count_tokens_text(text)
 
@@ -67,7 +66,7 @@ def break_up_to_chunks_file(
     filename: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP
 ) -> list[list[int]]:
     """Given a file containing text, breaks up that file into individual lists containing a token count that GPT-3 can accept in a single request"""
-    with open(filename, "r", encoding=ENCODING) as f:
+    with open(filename, "r", encoding=utils.ENCODING) as f:
         text = f.read()
         return break_up_to_chunks_text(text, chunk_size, overlap)
 
@@ -89,7 +88,7 @@ def write_chunks_to_files(
             continue
         log(f"\rWriting Chunk {i}: {len(chunk)} tokens", end="\r")
         retokenized = TOKENIZER.decode(chunk)
-        with open(full_path, "w", encoding=ENCODING) as f:
+        with open(full_path, "w", encoding=utils.ENCODING) as f:
             f.write(retokenized)
     log("Finished writing chunked token files")
     return chunks
@@ -155,7 +154,7 @@ def recurse_summary(
         )
         fname = _get_summarized_filename(filename, chunk_idx)
         full_path = os.path.join(output_path, fname)
-        with open(full_path, "w", encoding=ENCODING) as f:
+        with open(full_path, "w", encoding=utils.ENCODING) as f:
             f.write(response_text)
         return response_text
     except RateLimitError as rle:
@@ -205,7 +204,7 @@ def send_summary_prompts(
         full_path = os.path.join(output_path, _get_summarized_filename(filename, i))
         if os.path.exists(full_path) and not overwrite:
             log(f"Skipping sending chunk {i} for summary, already on disk")
-            with open(full_path, "r", encoding=ENCODING) as f:
+            with open(full_path, "r", encoding=utils.ENCODING) as f:
                 summarized_on_disk = f.read()
                 prompt_response.append(summarized_on_disk)
             continue
@@ -241,7 +240,7 @@ def summary_of_summaries(filename: str, summaries: list[str], course_title: str)
         log(
             f"Received final summary response. Response will be written to {output_path}"
         )
-        with open(output_path, "w", encoding=ENCODING) as f:
+        with open(output_path, "w", encoding=utils.ENCODING) as f:
             f.write(res)
         return res
     except RateLimitError as rle:
