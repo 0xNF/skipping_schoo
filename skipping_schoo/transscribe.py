@@ -74,6 +74,7 @@ def transcribe(
         log(f"Loading Whisper model '{model_size}'...")
         whisper = WhisperModel(model_size, device=device, compute_type=compute_type)
         log("Whisper model loaded. Beginning transcription")
+        starttime = datetime.datetime.now()
         segments, info = whisper.transcribe(input_filename, language=language)
         with open(full_path_out, "w", encoding="utf8") as f:
             for segment in segments:
@@ -90,7 +91,11 @@ def transcribe(
                 f.write("\n")
                 f.flush()
         utils.eprint("", end="\r")
-        log(f"Finished transcribing, output written to {full_path_out}")
+        endtime = datetime.datetime.now()
+        mins = (endtime - starttime).total_seconds() / 60
+        log(
+            f"Finished transcribing, took {mins} minutes, output written to {full_path_out}"
+        )
     return full_path_out
 
 

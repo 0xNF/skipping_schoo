@@ -26,7 +26,7 @@ __all__ = [
 ]
 
 
-def _pipeline(url: str, season: str, overwrite: bool = False) -> str:
+def _pipeline(url: str, overwrite: bool = False) -> str:
     """Runs the entire pipeline for downloading a schoo video. Prints the transcription to the terminal"""
     openai_key = os.getenv("OPENAI_API_KEY")
     if openai_key is None or len(openai_key) == 0:
@@ -36,7 +36,7 @@ def _pipeline(url: str, season: str, overwrite: bool = False) -> str:
     else:
         openai.api_key = openai_key
     course_title = download_schoo.get_video_title(url)
-    video_path = _downloadSchoo(url, season, overwrite=overwrite)
+    video_path = _downloadSchoo(url, overwrite=overwrite)
     wav_path = _ripAudio(video_path, overwrite=overwrite)
     transcription_path = _transcribeAudio(wav_path, overwrite=overwrite)
     summarize_path = _summarize(transcription_path, course_title, overwrite=overwrite)
@@ -46,10 +46,10 @@ def _pipeline(url: str, season: str, overwrite: bool = False) -> str:
         return summary
 
 
-def _downloadSchoo(url: str, season: str, overwrite: bool = False) -> str:
+def _downloadSchoo(url: str, overwrite: bool = False) -> str:
     """Downloads an entire schoo video from a schoo [url] or class id and returns the path of the file on disk"""
     video_id = download_schoo.parse_url(url)
-    m3u8 = download_schoo.get_m3u8_link(video_id, season)
+    m3u8 = download_schoo.get_m3u8_link(video_id)
     video_path = download_schoo.get_video(m3u8, f"{video_id}.mp4", overwrite=overwrite)
     return video_path
 
@@ -89,14 +89,7 @@ def main() -> int:
         description="Runs the entire pipeline to download a schoo video, rip its audio, transcribe its contents, and provide a summary",
     )
     parser.add_argument("url", help="Schoo URL or course number to summarize")
-    parser.add_argument(
-        "-s",
-        "--season",
-        nargs="?",
-        default="2001",
-        type=str,
-        help="Optional schoo season to further specify the course number. Defaults to '2001'",
-    )
+
     parser.add_argument(
         "-o",
         "--overwrite",
@@ -106,7 +99,7 @@ def main() -> int:
 
     args = parser.parse_args()
 
-    _pipeline(args.url, args.season, args.overwrite)
+    _pipeline(args.url, args.overwrite)
     return 0
 
 

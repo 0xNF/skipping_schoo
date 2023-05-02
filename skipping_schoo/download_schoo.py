@@ -78,11 +78,10 @@ def extract_m3u8_from_html(room_html: BeautifulSoup) -> str:
     return m3u8
 
 
-def get_m3u8_link(video_id: str, season: str = "2001") -> str:
-    """Returns a URL to the .m3u8 file for downloading. Of the format 'https://video.schoo.jp/video/$season/$video_id'"""
+def get_m3u8_link(video_id: str) -> str:
+    """Returns a URL to the .m3u8 file for downloading. Of the format 'https://video.schoo.jp/video/2001/$video_id'"""
     soup = get_room_html_data(video_id)
     return extract_m3u8_from_html(soup)
-    # return f"https://video.schoo.jp/full/{season}/{video_id}.m3u8"
 
 
 def get_video(m3u8_url: str, filename: str, overwrite: bool = False) -> str:

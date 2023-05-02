@@ -220,7 +220,9 @@ def send_summary_prompts(
 
 
 def summary_of_summaries(filename: str, summaries: list[str], course_title: str) -> str:
-    """Stitches each of the summaries together into one meta-summary and requests OpenAI summarize that instead"""
+    """Stitches each of the summaries together into one meta-summary and requests OpenAI summarize that instead
+    returns the path to the written output summary
+    """
     stitched = _stitch_summaries(summaries).strip()
     if len(stitched) == 0:
         log(
@@ -242,7 +244,7 @@ def summary_of_summaries(filename: str, summaries: list[str], course_title: str)
         )
         with open(output_path, "w", encoding=utils.ENCODING) as f:
             f.write(res)
-        return res
+        return output_path
     except RateLimitError as rle:
         _extract_and_wait_on_rate_limit(rle)
         return summary_of_summaries(filename, summaries, course_title)
