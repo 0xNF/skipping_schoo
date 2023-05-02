@@ -7,13 +7,29 @@
 # Installation
 `pip install -r requirements.txt`
 
-# Usage
+On windows, you may need to call
+```powershell
+$env:PYTHONPATH = "./skipping_schoo"
+```
+in order to find the module imports
+
+# N.B
 
 Add your OpenAI API key to the `OPENAI_API_KEY` environment variable before running.
 
 To make the first use of this flow easier, it is recommended to install `faster_whisper` and download the `large-v2` model before running.
 
-This program is intended to be used with Japanese language video. 
+This program is intended to be used with Japanese language video.
+
+# Usage
+```python -m skipping_schoo url```
+
+## Command line options:
+```
+-h                      help
+-o, --overwrite         Overwrites any old data files from a previous run of the same url input. Keep unset(False) to make recovering from crashes easier
+-c, --cleanup           Remove intermediary data when the next step finishes. If not set, the video, audio, and summary text snippets will remain on your computer
+```
 
 
 # Pipeline
